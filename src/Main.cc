@@ -53,6 +53,7 @@ int main(int argc, char* argv[]) {
     qRegisterMetaType< std::shared_ptr<of13::Error> >();
     qRegisterMetaType<of13::Port>();
     qRegisterMetaType<of13::Match>();
+    qRegisterMetaType<of13::FlowRemoved>();
     qRegisterMetaType<runos::SwitchConnectionPtr>("SwitchConnectionPtr");
 
     google::InitGoogleLogging(argv[0]);

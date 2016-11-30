@@ -17,8 +17,10 @@
 #pragma once
 #include "Application.hh"
 #include "Loader.hh"
+#include "HostManager.hh"
 
 class LearningSwitch : public Application {
+    HostManager* hostmanager;
 SIMPLE_APPLICATION(LearningSwitch, "learning-switch")
 public:
     void init(Loader* loader, const Config& config) override;

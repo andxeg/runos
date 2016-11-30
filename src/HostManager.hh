@@ -84,6 +84,7 @@ public slots:
     void onSwitchDiscovered(Switch* dp);
     void onSwitchDown(Switch* dp);
     void newPort(Switch* dp, of13::Port port);
+    void portDown(Switch* sw, uint32_t port_no);
 signals:
     void hostDiscovered(Host* dev);
 private:

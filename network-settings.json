@@ -12,7 +12,8 @@
         "arp-handler",
         "flow-manager",
         "rest-multipart",
-        "rest-flowmod"
+        "rest-flowmod",
+        "homework"
     ],
 
     "flow-manager" : {
@@ -25,12 +26,13 @@
     },
 
     "controller": {
-         "nthreads": 4,
+         "nthreads": 1,
          "cbench": false,
          "pipeline": [
-             "link-discovery",
+             "link-discovery", 
              "host-manager",
              "arp-handler",
+             "homework",
              "forwarding"
          ]
     },
@@ -51,6 +53,29 @@
     "switch-stats": {
 	"poll-interval": 1,
 	"pin-to-thread": 1
+    },
+
+    "homework":{
+        "switch_dpid": 8,
+        "idle_timeout": 60,
+        "servers": [
+            {   
+                "ip": "10.0.0.1",
+                "max_flows": 5,
+                "prob": 0.5
+            },
+            
+            {
+                "ip": "10.0.0.2",
+                "max_flows": 5,
+                "prob": 0.5
+            },
+            
+            {   "ip": "10.0.0.3",
+                "max_flows": 5,
+                "prob": 0.0
+            }
+        ]
     }
 }
 

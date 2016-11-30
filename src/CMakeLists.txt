@@ -38,6 +38,8 @@ set(SOURCES
     FlowManager.cc
     # Json
     json11.cpp
+    # Homework
+    Homework.cc
 )
 
 add_definitions(

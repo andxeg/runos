@@ -179,6 +179,7 @@ void HostManager::init(Loader *loader, const Config &config)
 void HostManager::onSwitchDiscovered(Switch* dp)
 {
     QObject::connect(dp, &Switch::portUp, this, &HostManager::newPort);
+    QObject::connect(dp, &Switch::portDown, this, &HostManager::portDown);
 }
 
 void HostManager::onSwitchDown(Switch *dp)
@@ -261,10 +262,20 @@ Host* HostManager::getHost(IPAddress ip)
     return nullptr;
 }
 
-void HostManager::newPort(Switch *, of13::Port port)
+void HostManager::newPort(Switch * dp, of13::Port port)
 {
     switch_macs.push_back(port.hw_addr().to_string());
+    delHostForSwitch(dp);
 }
+
+void HostManager::portDown(Switch* sw, uint32_t port_no) {
+    LOG(INFO) << "Port "
+              << port_no
+              << " on Switch "
+              << sw->idstr()
+              << " was delete";
+}
+
 
 std::unordered_map<std::string, Host*> HostManager::hosts()
 {

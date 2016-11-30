@@ -32,7 +32,7 @@
 #include "SwitchConnection.hh"
 #include "Flow.hh"
 
-REGISTER_APPLICATION(LearningSwitch, {"controller", "topology", ""})
+REGISTER_APPLICATION(LearningSwitch, {"controller", "topology", "host-manager", ""})
 
 using namespace runos;
 
@@ -71,28 +71,26 @@ void LearningSwitch::init(Loader *loader, const Config &)
 {
     Controller* ctrl = Controller::get(loader);
     auto topology = Topology::get(loader);
-    auto db = std::make_shared<HostsDatabase>();
+    hostmanager = HostManager::get(loader);
 
     ctrl->registerHandler("forwarding",
     [=](SwitchConnectionPtr connection) {
         const auto ofb_in_port = oxm::in_port();
-        const auto ofb_eth_src = oxm::eth_src();
         const auto ofb_eth_dst = oxm::eth_dst();
 
         return [=](Packet& pkt, FlowPtr, Decision decision) {
             // Get required fields
             ethaddr dst_mac = pkt.load(ofb_eth_dst);
 
-            db->learn(connection->dpid(),
-                      pkt.load(ofb_in_port),
-                      packet_cast<TraceablePacket>(pkt).watch(ofb_eth_src));
+            std::stringstream tmp;
+            tmp << dst_mac;
+            Host* target = hostmanager->getHost(tmp.str());
 
-            auto target = db->query(dst_mac);
 
             // Forward
             if (target) {
                 auto route = topology
-                             ->computeRoute(connection->dpid(), target->dpid);
+                             ->computeRoute(connection->dpid(), target->switchID());
 
                 if (route.size() > 0) {
                     DVLOG(10) << "Forwarding packet from "
@@ -100,24 +98,24 @@ void LearningSwitch::init(Loader *loader, const Config &)
                               << ':' << uint32_t(pkt.load(ofb_in_port))
                               << " via port " << route[0].port
                               << " to " << ethaddr(pkt.load(ofb_eth_dst))
-                              << " seen at " << target->dpid;
+                              << " seen at " << target->switchID();
                     // unicast via core
                     return decision.unicast(route[0].port)
                                    .idle_timeout(std::chrono::seconds(60))
                                    .hard_timeout(std::chrono::minutes(30));
-                } else if (connection->dpid() == target->dpid) {
+                } else if (connection->dpid() == target->switchID()) {
                     DVLOG(10) << "Forwarding packet from "
                               << connection->dpid()
                               << ':' << uint32_t(pkt.load(ofb_in_port))
-                              << " via port " << target->port;
+                              << " via port " << target->switchPort();
                     // send through core border
-                    return decision.unicast(target->port)
+                    return decision.unicast(target->switchPort())
                                    .idle_timeout(std::chrono::seconds(60))
                                    .hard_timeout(std::chrono::minutes(30));
                 } else {
                     LOG(WARNING)
                         << "Path from " << connection->dpid()
-                        << " to " << target->dpid << " not found";
+                        << " to " << target->switchID() << " not found";
                     return decision.drop()
                                    .idle_timeout(std::chrono::seconds(30))
                                    .hard_timeout(std::chrono::seconds(60))
